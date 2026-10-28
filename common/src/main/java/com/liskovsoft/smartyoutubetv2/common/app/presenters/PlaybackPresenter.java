@@ -6,6 +6,7 @@ import android.content.Context;
 
 import com.liskovsoft.mediaserviceinterfaces.data.MediaItemMetadata;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.Playlist;
+import com.liskovsoft.smartyoutubetv2.common.app.models.data.AllowList;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.Video;
 import com.liskovsoft.smartyoutubetv2.common.app.models.playback.BasePlayerController;
 import com.liskovsoft.smartyoutubetv2.common.app.models.playback.controllers.AutoFrameRateController;
@@ -111,6 +112,11 @@ public class PlaybackPresenter extends BasePresenter<PlaybackView> implements Pl
 
     public void openVideo(Video video) {
         if (video == null) {
+            return;
+        }
+
+        // KidTube: only allow-listed channels / songs
+        if (!AllowList.instance(getContext()).isVideoAllowed(video)) {
             return;
         }
 
@@ -229,6 +235,11 @@ public class PlaybackPresenter extends BasePresenter<PlaybackView> implements Pl
 
     @Override
     public void onNewVideo(Video video) {
+        // KidTube: only allow-listed channels / songs
+        if (!AllowList.instance(getContext()).isVideoAllowed(video)) {
+            return;
+        }
+
         process(listener -> listener.onNewVideo(video));
         mVideo = new WeakReference<>(video);
         mIsEmbedPlayerStarted = true;
@@ -246,6 +257,17 @@ public class PlaybackPresenter extends BasePresenter<PlaybackView> implements Pl
 
     @Override
     public void onMetadata(MediaItemMetadata metadata) {
+        // KidTube: the real channel is known now. Close the player if the video isn't allowed.
+        if (AllowList.LOCKDOWN && metadata != null) {
+            Video current = getVideo();
+            if (current != null && !AllowList.instance(getContext()).isVideoAllowed(current.videoId, metadata.getChannelId())) {
+                if (getView() != null) {
+                    getView().finishReally();
+                }
+                return;
+            }
+        }
+
         process(listener -> listener.onMetadata(metadata));
     }
 

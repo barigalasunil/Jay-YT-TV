@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="update_urls">
+        <!-- The GitHub workflow replaces YOUR_GITHUB_USER/YOUR_REPO with your repo automatically -->
+        <item>https://github.com/YOUR_GITHUB_USER/YOUR_REPO/releases/latest/download/kidtube.json</item>
+    </string-array>
+</resources>

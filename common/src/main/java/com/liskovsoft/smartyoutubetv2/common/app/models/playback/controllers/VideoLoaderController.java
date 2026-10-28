@@ -14,6 +14,7 @@ import com.liskovsoft.sharedutils.rx.RxHelper;
 import com.liskovsoft.smartyoutubetv2.common.R;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.Playlist;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.SimpleMediaItem;
+import com.liskovsoft.smartyoutubetv2.common.app.models.data.AllowList;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.Video;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.VideoGroup;
 import com.liskovsoft.smartyoutubetv2.common.app.models.playback.BasePlayerController;
@@ -152,6 +153,16 @@ public class VideoLoaderController extends BasePlayerController {
 
     public void loadNext() {
         if (getPlayer() == null || getVideo() == null) {
+            return;
+        }
+
+        if (AllowList.LOCKDOWN) {
+            // KidTube: never jump to YouTube's own "up next"
+            Video song = AllowList.instance(getContext()).findNextSong(getVideo().videoId);
+            Video next = song != null ? song : mSuggestionsController.getNext();
+            if (next != null) {
+                openVideoInt(next);
+            }
             return;
         }
 
@@ -364,6 +375,11 @@ public class VideoLoaderController extends BasePlayerController {
             return;
         }
 
+        // KidTube: only allow-listed channels / songs
+        if (!AllowList.instance(getContext()).isVideoAllowed(item)) {
+            return;
+        }
+
         disposeActions();
 
         if (item.hasVideo()) {
@@ -406,6 +422,16 @@ public class VideoLoaderController extends BasePlayerController {
         }
 
         if (isEmbedPlayer()) {
+            playbackMode = PlayerConstants.PLAYBACK_MODE_CLOSE;
+        }
+
+        if (AllowList.LOCKDOWN) {
+            // KidTube: songs play one after another (looping). Other videos: close the player at the end.
+            Video nextSong = AllowList.instance(getContext()).findNextSong(video.videoId);
+            if (nextSong != null) {
+                openVideoInt(nextSong);
+                return;
+            }
             playbackMode = PlayerConstants.PLAYBACK_MODE_CLOSE;
         }
 

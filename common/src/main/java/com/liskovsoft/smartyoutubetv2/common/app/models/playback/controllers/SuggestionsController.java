@@ -17,6 +17,7 @@ import com.liskovsoft.sharedutils.mylogger.Log;
 import com.liskovsoft.sharedutils.rx.RxHelper;
 import com.liskovsoft.smartyoutubetv2.common.R;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.Playlist;
+import com.liskovsoft.smartyoutubetv2.common.app.models.data.AllowList;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.Video;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.VideoGroup;
 import com.liskovsoft.smartyoutubetv2.common.app.models.playback.BasePlayerController;
@@ -389,7 +390,7 @@ public class SuggestionsController extends BasePlayerController {
         int groupIndex = -1;
         int suggestRows = -1;
 
-        if (GeneralData.instance(getContext()).isChildModeEnabled() || getPlayerTweaksData().isSuggestionsDisabled()) {
+        if (AllowList.LOCKDOWN || GeneralData.instance(getContext()).isChildModeEnabled() || getPlayerTweaksData().isSuggestionsDisabled()) {
             suggestRows = video.hasPlaylist() ? 1 : 0;
         }
 

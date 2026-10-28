@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "channels": [
+    { "name": "Example channel (replace me)", "id": "PUT_CHANNEL_ID_HERE" }
+  ],
+  "songs": [
+    { "title": "Example song (replace me)", "id": "PUT_VIDEO_ID_HERE" }
+  ]
+}

@@ -6,6 +6,7 @@ import com.liskovsoft.appupdatechecker2.AppUpdateChecker;
 import com.liskovsoft.appupdatechecker2.AppUpdateCheckerListener;
 import com.liskovsoft.sharedutils.helpers.MessageHelpers;
 import com.liskovsoft.smartyoutubetv2.common.R;
+import com.liskovsoft.smartyoutubetv2.common.app.models.data.AllowList;
 import com.liskovsoft.smartyoutubetv2.common.app.models.errors.ErrorFragmentData;
 import com.liskovsoft.smartyoutubetv2.common.app.models.playback.ui.OptionItem;
 import com.liskovsoft.smartyoutubetv2.common.app.models.playback.ui.UiOptionItem;
@@ -64,7 +65,7 @@ public class AppUpdatePresenter extends BasePresenter<Void> implements AppUpdate
         if (mIsForceCheck) {
             LoadingManager.showLoading(getContext(), false);
             showUpdateDialog(versionName, changelog, apkPath);
-        } else if (GeneralData.instance(getContext()).isOldUpdateNotificationsEnabled()) {
+        } else if (AllowList.LOCKDOWN || GeneralData.instance(getContext()).isOldUpdateNotificationsEnabled()) {
             showUpdateDialog(versionName, changelog, apkPath);
         } else {
             pinUpdateSection(versionName, changelog, apkPath);

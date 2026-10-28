@@ -8,6 +8,7 @@ import com.liskovsoft.mediaserviceinterfaces.data.SearchOptions;
 import com.liskovsoft.sharedutils.mylogger.Log;
 import com.liskovsoft.sharedutils.rx.RxHelper;
 import com.liskovsoft.smartyoutubetv2.common.R;
+import com.liskovsoft.smartyoutubetv2.common.app.models.data.AllowList;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.Video;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.VideoGroup;
 import com.liskovsoft.smartyoutubetv2.common.app.models.playback.ui.OptionItem;
@@ -156,6 +157,10 @@ public class SearchPresenter extends BasePresenter<SearchView> implements VideoG
     }
 
     public void onSearch(String searchText) {
+        if (AllowList.LOCKDOWN) { // KidTube: search disabled
+            return;
+        }
+
         // Restore the search in case the view unloaded from the memory
         mSearchText = searchText;
 
@@ -278,6 +283,10 @@ public class SearchPresenter extends BasePresenter<SearchView> implements VideoG
     }
 
     private void startSearch(String searchText, boolean isVoice, boolean startPlay) {
+        if (AllowList.LOCKDOWN) { // KidTube: search disabled (text, voice, global search, deep links)
+            return;
+        }
+
         mSearchText = searchText;
         mIsVoice = isVoice;
         mStartPlay = startPlay;

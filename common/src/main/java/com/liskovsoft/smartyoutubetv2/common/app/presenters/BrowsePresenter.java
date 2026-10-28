@@ -14,6 +14,7 @@ import com.liskovsoft.sharedutils.locale.LocaleUtility;
 import com.liskovsoft.sharedutils.mylogger.Log;
 import com.liskovsoft.sharedutils.rx.RxHelper;
 import com.liskovsoft.smartyoutubetv2.common.R;
+import com.liskovsoft.smartyoutubetv2.common.app.models.data.AllowList;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.BrowseSection;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.Playlist;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.SettingsGroup;
@@ -62,6 +63,8 @@ public class BrowsePresenter extends BasePresenter<BrowseView> implements Sectio
     @SuppressLint("StaticFieldLeak")
     private static BrowsePresenter sInstance;
     private final List<BrowseSection> mSections;
+    // KidTube: one Video per allow-listed channel (rebuilt on every sections refresh)
+    private final List<Video> mAllowedChannelItems = new ArrayList<>();
     private final List<BrowseSection> mErrorSections;
     private final Map<Integer, Observable<MediaGroup>> mGridMapping;
     private final Map<Integer, Observable<List<MediaGroup>>> mRowMapping;
@@ -121,6 +124,11 @@ public class BrowsePresenter extends BasePresenter<BrowseView> implements Sectio
         }
 
         updateSections();
+
+        // KidTube: pull the newest channels.json from GitHub; rebuild sections only if it changed
+        if (AllowList.LOCKDOWN) {
+            AllowList.instance(getContext()).refreshAsync(this::updateSections);
+        }
 
         // Move default focus
         int selectedSectionIndex = findSectionIndex(mCurrentSection != null ? mCurrentSection.getId() : mBootstrapSectionId);
@@ -233,6 +241,12 @@ public class BrowsePresenter extends BasePresenter<BrowseView> implements Sectio
 
     private void initPinnedSections() {
         mSections.clear();
+        mAllowedChannelItems.clear();
+
+        if (AllowList.LOCKDOWN) {
+            initAllowListSections();
+            return;
+        }
 
         Collection<Video> pinnedItems = getSidebarService().getPinnedItems();
 
@@ -252,7 +266,45 @@ public class BrowsePresenter extends BasePresenter<BrowseView> implements Sectio
         }
     }
 
+    /**
+     * KidTube: sidebar = [Songs] + one section per allowed channel + [Settings].
+     * Nothing else (no Home, Trending, Subscriptions, Search...).
+     */
+    private void initAllowListSections() {
+        AllowList list = AllowList.instance(getContext());
+
+        if (!list.getSongs().isEmpty()) {
+            mSections.add(new BrowseSection(AllowList.SONGS_SECTION_ID, "Songs", BrowseSection.TYPE_GRID, R.drawable.icon_music, false));
+        }
+
+        for (AllowList.Channel channel : list.getChannels()) {
+            Video item = new Video();
+            item.channelId = channel.id;
+            item.title = channel.name;
+            mAllowedChannelItems.add(item);
+            mSections.add(createPinnedSection(item));
+        }
+
+        BrowseSection settings = mSectionsMapping.get(MediaGroup.TYPE_SETTINGS);
+        if (settings != null) {
+            mSections.add(settings);
+        }
+    }
+
+    private void initAllowListCallbacks() {
+        mLocalGridMappings.put(AllowList.SONGS_SECTION_ID, () -> AllowList.instance(getContext()).createSongVideos());
+
+        for (Video item : mAllowedChannelItems) {
+            createPinnedMapping(item);
+        }
+    }
+
     private void initPinnedCallbacks() {
+        if (AllowList.LOCKDOWN) {
+            initAllowListCallbacks();
+            return;
+        }
+
         Collection<Video> pinnedItems = getSidebarService().getPinnedItems();
 
         for (Video item : pinnedItems) {
@@ -304,6 +356,11 @@ public class BrowsePresenter extends BasePresenter<BrowseView> implements Sectio
         getView().removeAllSections();
 
         int bootSectionId = getSidebarService().getBootSectionId();
+
+        if (AllowList.LOCKDOWN) {
+            bootSectionId = -1;
+            mBootSectionIndex = 0;
+        }
 
         // Empty Home on first run fix. Switch to something non-empty.
         if (!getSignInService().isSigned() && VideoStateService.instance(getContext()).isEmpty()) {
@@ -449,6 +506,10 @@ public class BrowsePresenter extends BasePresenter<BrowseView> implements Sectio
 
     @Override
     public void onVideoItemLongClicked(Video item) {
+        if (AllowList.LOCKDOWN) {
+            return;
+        }
+
         if (getContext() == null) {
             return;
         }
@@ -501,6 +562,10 @@ public class BrowsePresenter extends BasePresenter<BrowseView> implements Sectio
 
     @Override
     public void onSectionLongPressed(int sectionId) {
+        if (AllowList.LOCKDOWN) {
+            return;
+        }
+
         SectionMenuPresenter.instance(getContext()).showMenu(findSectionById(sectionId));
     }
 
@@ -1178,6 +1243,10 @@ public class BrowsePresenter extends BasePresenter<BrowseView> implements Sectio
     }
 
     private boolean enableRows(Video item) {
+        if (AllowList.LOCKDOWN) {
+            return false;
+        }
+
         return getMainUIData().isPinnedChannelRowsEnabled() && item.hasChannel() && !item.isPlaylistAsChannel();
     }
 

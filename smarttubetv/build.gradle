@@ -57,8 +57,9 @@ android {
         applicationId "app.smarttube"
         minSdkVersion project.properties.minSdkVersion
         targetSdkVersion project.properties.targetSdkVersion
-        versionCode 2458
-        versionName "32.68"
+        // KidTube: CI passes VERSION_CODE (the GitHub run number). Local builds default to 1.
+        versionCode Integer.parseInt(System.getenv("VERSION_CODE") ?: "1")
+        versionName "1.0." + (System.getenv("VERSION_CODE") ?: "1")
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField "long", "TIMESTAMP", System.currentTimeMillis() + "L"
 
@@ -168,7 +169,7 @@ android {
             targetSdkVersion project.properties.compileSdkVersion
         }
         stfdroid {
-            applicationId "app.smarttube.fdroid"
+            applicationId "app.kidtube.tv"
             minSdkVersion 21
             targetSdkVersion project.properties.compileSdkVersion
 

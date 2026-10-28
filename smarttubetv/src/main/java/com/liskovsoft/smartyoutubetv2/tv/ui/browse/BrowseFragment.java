@@ -147,7 +147,8 @@ public class BrowseFragment extends BrowseSupportFragment implements BrowseView 
                 }
         );
 
-        setOnSearchClickedListener(view -> SearchPresenter.instance(getContext()).startSearch(null));
+        // KidTube: no search orb. (Search is also disabled inside SearchPresenter.)
+        //setOnSearchClickedListener(view -> SearchPresenter.instance(getContext()).startSearch(null));
     }
 
     private void setupFragmentFactory() {
