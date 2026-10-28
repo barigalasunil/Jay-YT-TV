@@ -1,9 +1,25 @@
 {
   "version": 1,
   "channels": [
-    { "name": "Example channel (replace me)", "id": "PUT_CHANNEL_ID_HERE" }
+    { "name": "DanielTigersNeighbourhood", "id": "UCB1NBqgditIHwk1c8sGky2A" },
+	{ "name": "MonkeyQuiz", "id": "UCGsMGfpD-fCcjRCQNyIUPog" },
+	{ "name": "BlueyOfficialChannel", "id": "UCGsMGfpD-fCcjRCQNyIUPog" },
+	{ "name": "QuizKingdomYT", "id": "UCpcg89bURMn5tUD3SpTG_3A" },
+	{ "name": "HomeschoolPop", "id": "UCfPyVJEBD7Di1YYjTdS2v8g" },
+	{ "name": "QuizDinoYT", "id": "UCu5eMYD97U1CckeROT_kxTQ" },
+	{ "name": "natgeokids", "id": "UCXVCgDuD_QCkI7gTKU7-tpg" },
+	{ "name": "freeschool", "id": "UCebMFnw6WxozGmqGekJHOJg" },
+	{ "name": "KidsAcademyCom", "id": "UCqb89GqploCXgz4lsdR-_ww" },
+	{ "name": "KhanAcademyKids", "id": "UC2ri4rEb8abnNwXvTjg5ARw" },
+	{ "name": "KooKooTVTelugu", "id": "UCZNr3-bxFbzfLzbiJ_rJ5zw" },
+	{ "name": "kidsonetelugu", "id": "UCjCHw0Np-xswtfxQac2yiYA" },
+	{ "name": "villagetalesoffl", "id": "UCPRoMoN_moHvynmbP7F-SRg" },
+	{ "name": "sargamkidstelugu", "id": "UCiWatT8PZJkw7W8K8j6eGsA" },
+	{ "name": "SheriffLabrador", "id": "UCpYye8D5fFMUPf9nSfgd4bA" }
   ],
   "songs": [
-    { "title": "Example song (replace me)", "id": "PUT_VIDEO_ID_HERE" }
+    { "title": "Neno Butterfly Lyric Video", "id": "9dV6Hl2u3vM" },
+	{ "title": "Konte Chuputho", "id": "BCwsSk_KKrE" },
+	{ "title": "Andamaina Premarani", "id": "I8WpNNboaw" },
   ]
 }
