@@ -1,4 +1,4 @@
-# Usage: .\scripts\install-to-tv.ps1 -TvIp 192.168.1.50 [-Apk path\to\KidTube.apk]
+# Usage: .\scripts\install-to-tv.ps1 -TvIp 192.168.1.50 [-Apk path\to\app.apk]
 param(
   [Parameter(Mandatory = $true)][string]$TvIp,
   [string]$Apk = ""
@@ -11,11 +11,11 @@ if (-not (Get-Command adb -ErrorAction SilentlyContinue)) { throw "adb not found
 if ($Apk -eq "") {
   if (-not (Get-Command gh -ErrorAction SilentlyContinue)) { throw "gh not found. Pass -Apk <path> instead." }
   New-Item -ItemType Directory -Force downloads | Out-Null
-  gh release download --pattern KidTube.apk --dir downloads --clobber
-  $Apk = "downloads\KidTube.apk"
+  gh release download --pattern "*.apk" --dir downloads --clobber
+  $Apk = (Get-ChildItem downloads\*.apk | Sort-Object LastWriteTime -Descending | Select-Object -First 1).FullName
 }
 
 adb connect "${TvIp}:5555"
 Read-Host "If the TV shows 'Allow USB debugging?', choose Always allow + OK, then press Enter here"
 adb -s "${TvIp}:5555" install -r $Apk
-Write-Host "Installed. Open KidTube from the TV's app list."
+Write-Host "Installed. Open Jay TV from the TV's app list."

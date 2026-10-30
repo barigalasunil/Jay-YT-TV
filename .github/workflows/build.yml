@@ -1,4 +1,4 @@
-name: Build KidTube APK
+name: Build Jay TV APK
 
 on:
   push:
@@ -75,13 +75,20 @@ jobs:
 
       - name: Prepare release files
         run: |
+          APP_NAME=$(head -n 1 branding/app_name.txt 2>/dev/null | tr -d '\r')
+          if [ -z "$APP_NAME" ]; then APP_NAME="KidTube"; fi
+          SLUG=$(printf '%s' "$APP_NAME" | sed 's/[^A-Za-z0-9]\+/-/g; s/^-//; s/-$//')
+          APK_NAME="${SLUG}.apk"
+          echo "APP_NAME=$APP_NAME" >> "$GITHUB_ENV"
+          echo "APK_NAME=$APK_NAME" >> "$GITHUB_ENV"
+
           APK=$(ls smarttubetv/build/outputs/apk/stfdroid/release/*_universal.apk | head -n 1)
-          cp "$APK" KidTube.apk
+          cp "$APK" "$APK_NAME"
           N="${VERSION_CODE}"
           cat > kidtube.json <<JSON
           {
-            "package": { "downloadUrl": "https://github.com/${GITHUB_REPOSITORY}/releases/download/v${N}/KidTube.apk" },
-            "1.0.${N}": { "versionCode": ${N}, "changelog": ["KidTube build ${N}"] }
+            "package": { "downloadUrl": "https://github.com/${GITHUB_REPOSITORY}/releases/download/v${N}/${APK_NAME}" },
+            "1.0.${N}": { "versionCode": ${N}, "changelog": ["${APP_NAME} build ${N}"] }
           }
           JSON
           cat kidtube.json
@@ -90,7 +97,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "v${VERSION_CODE}" KidTube.apk kidtube.json \
-            --title "KidTube build ${VERSION_CODE}" \
+          gh release create "v${VERSION_CODE}" "$APK_NAME" kidtube.json \
+            --title "${APP_NAME} build ${VERSION_CODE}" \
             --notes "Automatic build ${VERSION_CODE}. The TV app offers this update on next launch." \
             --latest

@@ -1,16 +1,35 @@
-# KidTube link list. Paste links here; they are ADDED to channels.json (nothing is overwritten).
-# One link per line. Lines starting with # are ignored. Already-added links are skipped.
+# ============================== HOW TO USE THIS FILE ==============================
+# Paste YouTube LINKS below (not IDs). A GitHub Action looks up the IDs and titles and
+# ADDS them to channels.json. Nothing already in channels.json is ever overwritten.
+# New items are put on TOP of their list (newest first).
 #
-# - A video link (watch?v=..., youtu.be/..., shorts/...) becomes a SONG.
-# - Anything else (@handle, /channel/UC..., /c/name, /user/name) becomes a CHANNEL.
-# - Optional custom name:   My name | https://www.youtube.com/@something
+# WHERE A LINK GOES - write a header line; every link below it goes there:
+#   [songs]      video links    -> "Songs" section
+#   [scenes]     video links    -> "Scenes" section
+#   [channels]   channel links  -> one sidebar entry per channel
 #
-# To REMOVE a channel or song: delete its entry in channels.json (removing the line here does nothing).
+# OR choose on a single line with a prefix (it wins over the header above it):
+#   song: https://youtu.be/XXXXXXXXXXX
+#   scene: https://youtu.be/XXXXXXXXXXX
+#   channel: https://www.youtube.com/@SomeChannel
 #
-# Examples (delete the # to use them):
-# https://www.youtube.com/@SomeChannel
+# CUSTOM NAME (optional):   scene: Beach day | https://youtu.be/XXXXXXXXXXX
+# NO HEADER, NO PREFIX:     a video link becomes a song, anything else becomes a channel.
+#
+# Lines that start with # are ignored. A link that was already added is skipped.
+# To REMOVE something: delete its entry in channels.json (deleting the line here does nothing).
+#
+# Example (remove the # to try it):
+# [songs]
 # https://www.youtube.com/watch?v=XXXXXXXXXXX
-# Baby songs | https://youtu.be/XXXXXXXXXXX
+# [scenes]
+# https://youtu.be/XXXXXXXXXXX
+# [channels]
+# https://www.youtube.com/@SomeChannel
+# =================================================================================
 
+<<<<<<< Updated upstream
 [channels]
 https://www.youtube.com/@FoodTechToday
+=======
+>>>>>>> Stashed changes

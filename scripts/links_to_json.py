@@ -8,8 +8,9 @@ Where a link goes (you choose):
 
 Optional custom name:   scene: Peppa at the beach | https://youtu.be/XXXXXXXXXXX
 
-It MERGES: everything already in channels.json is kept, new links are added at the end,
-duplicates are skipped, a link that already exists is only renamed if you gave a custom name.
+It MERGES: everything already in channels.json is kept, new links are added on TOP of the existing
+entries (see NEWEST_FIRST below), duplicates are skipped, a link that already exists is only renamed
+if you gave a custom name.
 Nothing is ever removed (to remove something, edit channels.json).
 
 Usage: python3 scripts/links_to_json.py [links.txt] [channels.json]
@@ -25,6 +26,10 @@ import urllib.request
 UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36"
 VIDEO_ID = r"[A-Za-z0-9_-]{11}"
 CHANNEL_ID = r"UC[A-Za-z0-9_-]{22}"
+
+# True  = new items are put at the TOP of their list (newest first)
+# False = new items are added at the END
+NEWEST_FIRST = True
 
 KINDS = {"channel": "channels", "channels": "channels",
          "song": "songs", "songs": "songs",
@@ -137,6 +142,7 @@ def main():
     data = load_existing(dst)
     before = {k: len(v) for k, v in data.items()}
     index = {k: {e["id"]: e for e in v} for k, v in data.items()}
+    new = {"channels": [], "songs": [], "scenes": []}
     failed, wanted = [], 0
     current = None  # None = automatic
 
@@ -166,7 +172,7 @@ def main():
                         index[kind][vid]["title"] = custom
                 else:
                     entry = {"title": custom or video_title(vid), "id": vid}
-                    data[kind].append(entry)
+                    new[kind].append(entry)
                     index[kind][vid] = entry
             else:
                 if vid:
@@ -179,10 +185,13 @@ def main():
                         index["channels"][cid]["name"] = custom
                 else:
                     entry = {"name": custom or name, "id": cid}
-                    data["channels"].append(entry)
+                    new["channels"].append(entry)
                     index["channels"][cid] = entry
         except Exception as e:
             failed.append((raw.strip(), str(e)))
+
+    for k in data:
+        data[k] = (new[k] + data[k]) if NEWEST_FIRST else (data[k] + new[k])
 
     print("Channels: %d (was %d) | Songs: %d (was %d) | Scenes: %d (was %d) | Failed: %d" % (
         len(data["channels"]), before["channels"], len(data["songs"]), before["songs"],
