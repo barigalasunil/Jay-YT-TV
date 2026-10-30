@@ -28,8 +28,5 @@
 # https://www.youtube.com/@SomeChannel
 # =================================================================================
 
-<<<<<<< Updated upstream
-[channels]
-https://www.youtube.com/@FoodTechToday
-=======
->>>>>>> Stashed changes
+[songs]
+https://www.youtube.com/watch?v=_SZPGnMgaj4&list=RD_SZPGnMgaj4&start_radio=1&pp=oAcB
