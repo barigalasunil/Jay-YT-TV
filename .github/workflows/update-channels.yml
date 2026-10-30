@@ -1,0 +1,52 @@
+name: Update channels from links
+
+# Edit links.txt (just paste YouTube links). This turns it into channels.json,
+# which the TV app reads on every start. No APK rebuild needed.
+on:
+  push:
+    branches: [ master, main ]
+    paths:
+      - 'links.txt'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Convert links.txt to channels.json
+        run: |
+          set +e
+          python3 scripts/links_to_json.py links.txt channels.json | tee result.txt
+          code=${PIPESTATUS[0]}
+          {
+            echo '### links.txt result'
+            echo '```'
+            cat result.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$code" = "1" ]; then
+            echo "::error::Nothing could be resolved from links.txt. channels.json was left unchanged."
+            exit 1
+          fi
+          if [ "$code" = "2" ]; then
+            echo "::warning::Some links could not be resolved. See the job summary."
+          fi
+          exit 0
+
+      - name: Commit channels.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add channels.json
+          if git diff --cached --quiet; then
+            echo "channels.json unchanged."
+          else
+            git commit -m "Update channels.json from links.txt"
+            git push
+          fi

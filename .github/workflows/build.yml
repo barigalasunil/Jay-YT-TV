@@ -6,6 +6,7 @@ on:
     # Editing only channels.json (or docs) does NOT rebuild: the TV reads channels.json live from GitHub.
     paths-ignore:
       - 'channels.json'
+      - 'links.txt'
       - '**.md'
   workflow_dispatch:
 
