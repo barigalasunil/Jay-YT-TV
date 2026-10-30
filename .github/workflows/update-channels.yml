@@ -1,13 +1,34 @@
 name: Update channels from links
 
-# Edit links.txt (just paste YouTube links). This turns it into channels.json,
-# which the TV app reads on every start. No APK rebuild needed.
+# Two ways to use this:
+#  A) Edit links.txt on github.com (paste links under [songs], [scenes] or [channels]) and commit.
+#  B) Actions tab > "Update channels from links" > Run workflow: pick where the link goes, paste it.
+# Either way the details (IDs, titles) are looked up automatically and ADDED to channels.json.
+# The TV reads channels.json on every app start. No rebuild, nothing to pull.
 on:
   push:
     branches: [ master, main ]
     paths:
       - 'links.txt'
   workflow_dispatch:
+    inputs:
+      kind:
+        description: 'Where should the link go?'
+        type: choice
+        required: true
+        default: song
+        options:
+          - song
+          - scene
+          - channel
+      link:
+        description: 'YouTube link (video link for song/scene, channel link for channel)'
+        required: false
+        type: string
+      name:
+        description: 'Custom name (optional, otherwise taken from YouTube)'
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -19,7 +40,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Convert links.txt to channels.json
+      - name: Add the link from the Run-workflow form
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.link != '' }}
+        env:
+          KIND: ${{ inputs.kind }}
+          LINK: ${{ inputs.link }}
+          NAME: ${{ inputs.name }}
+        run: |
+          LINK=$(printf '%s' "$LINK" | tr -d '\r\n')
+          NAME=$(printf '%s' "$NAME" | tr -d '\r\n|')
+          if [ -n "$NAME" ]; then LINE="$KIND: $NAME | $LINK"; else LINE="$KIND: $LINK"; fi
+          printf '\n%s\n' "$LINE" >> links.txt
+          echo "Added to links.txt: $LINE"
+
+      - name: Add links.txt to channels.json
         run: |
           set +e
           python3 scripts/links_to_json.py links.txt channels.json | tee result.txt
@@ -31,22 +65,23 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
           if [ "$code" = "1" ]; then
-            echo "::error::Nothing could be resolved from links.txt. channels.json was left unchanged."
+            echo "::error::Nothing could be resolved. channels.json was left unchanged. See the job summary."
             exit 1
           fi
           if [ "$code" = "2" ]; then
-            echo "::warning::Some links could not be resolved. See the job summary."
+            echo "::warning::Some lines could not be resolved. See the job summary."
           fi
           exit 0
 
-      - name: Commit channels.json
+      - name: Commit
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add channels.json
+          git add channels.json links.txt
           if git diff --cached --quiet; then
-            echo "channels.json unchanged."
+            echo "Nothing changed."
           else
-            git commit -m "Update channels.json from links.txt"
+            git commit -m "Update channels.json from links"
+            git pull --rebase --autostash || true
             git push
           fi

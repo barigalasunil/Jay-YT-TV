@@ -53,6 +53,8 @@ public final class AllowList {
 
     /** Reserved section id for the Songs section (pinned ids are > 100). */
     public static final int SONGS_SECTION_ID = 777_001;
+    /** Reserved section id for the Scenes section. */
+    public static final int SCENES_SECTION_ID = 777_002;
 
     private static final String CACHE_FILE = "allowlist_cache.json";
     private static final String ASSET_FILE = "channels.json";
@@ -82,8 +84,11 @@ public final class AllowList {
     private final Context mContext;
     private volatile List<Channel> mChannels = Collections.emptyList();
     private volatile List<Song> mSongs = Collections.emptyList();
+    // "scenes" are single videos, exactly like songs (same JSON shape), shown in their own section
+    private volatile List<Song> mScenes = Collections.emptyList();
     private volatile Set<String> mChannelIds = Collections.emptySet();
     private volatile Set<String> mSongIds = Collections.emptySet();
+    private volatile Set<String> mSceneIds = Collections.emptySet();
     private volatile String mRawJson;
     private boolean mRefreshRunning;
 
@@ -109,8 +114,17 @@ public final class AllowList {
         return mSongs;
     }
 
+    public List<Song> getScenes() {
+        return mScenes;
+    }
+
     public boolean isSongId(String videoId) {
         return videoId != null && mSongIds.contains(videoId);
+    }
+
+    /** True for any single video you listed under "songs" or "scenes". */
+    public boolean isListedVideoId(String videoId) {
+        return videoId != null && (mSongIds.contains(videoId) || mSceneIds.contains(videoId));
     }
 
     public boolean isChannelAllowed(String channelId) {
@@ -125,7 +139,7 @@ public final class AllowList {
         if (!LOCKDOWN) {
             return true;
         }
-        if (isSongId(videoId) || isChannelAllowed(channelId)) {
+        if (isListedVideoId(videoId) || isChannelAllowed(channelId)) {
             return true;
         }
         return channelId == null && ALLOW_UNKNOWN_CHANNEL;
@@ -144,12 +158,28 @@ public final class AllowList {
         return result;
     }
 
-    /** Next song after the given video id (wraps around). Null if the id is not a song. */
+    /** Builds the card items for the Scenes section, in the order of the JSON file. */
+    public List<Video> createSceneVideos() {
+        List<Video> result = new ArrayList<>();
+        for (Song scene : mScenes) {
+            result.add(createSongVideo(scene));
+        }
+        return result;
+    }
+
+    /**
+     * Next item after the given video id inside ITS OWN list (songs or scenes), wrapping around.
+     * Null if the id is in neither list.
+     */
     public Video findNextSong(String videoId) {
-        List<Song> songs = mSongs;
-        for (int i = 0; i < songs.size(); i++) {
-            if (songs.get(i).id.equals(videoId)) {
-                return createSongVideo(songs.get((i + 1) % songs.size()));
+        Video next = findNextIn(mSongs, videoId);
+        return next != null ? next : findNextIn(mScenes, videoId);
+    }
+
+    private Video findNextIn(List<Song> list, String videoId) {
+        for (int i = 0; i < list.size(); i++) {
+            if (list.get(i).id.equals(videoId)) {
+                return createSongVideo(list.get((i + 1) % list.size()));
             }
         }
         return null;
@@ -252,31 +282,43 @@ public final class AllowList {
 
             List<Song> songs = new ArrayList<>();
             Set<String> songIds = new HashSet<>();
-            JSONArray so = root.optJSONArray("songs");
-            if (so != null) {
-                for (int i = 0; i < so.length(); i++) {
-                    JSONObject o = so.optJSONObject(i);
-                    if (o == null) {
-                        continue;
-                    }
-                    String id = o.optString("id", "").trim();
-                    if (id.length() != 11) {
-                        continue;
-                    }
-                    songs.add(new Song(id, o.optString("title", id)));
-                    songIds.add(id);
-                }
-            }
+            parseVideos(root.optJSONArray("songs"), songs, songIds);
+
+            List<Song> scenes = new ArrayList<>();
+            Set<String> sceneIds = new HashSet<>();
+            parseVideos(root.optJSONArray("scenes"), scenes, sceneIds);
 
             mChannels = Collections.unmodifiableList(channels);
             mChannelIds = channelIds;
             mSongs = Collections.unmodifiableList(songs);
             mSongIds = songIds;
+            mScenes = Collections.unmodifiableList(scenes);
+            mSceneIds = sceneIds;
             mRawJson = json;
             return true;
         } catch (Exception e) {
             Log.e(TAG, "Bad channels.json: " + e);
             return false;
+        }
+    }
+
+    /** Reads [{"title":"..","id":"<11 chars>"}] ("name" is accepted instead of "title"). Bad rows are skipped. */
+    private static void parseVideos(JSONArray array, List<Song> out, Set<String> ids) {
+        if (array == null) {
+            return;
+        }
+        for (int i = 0; i < array.length(); i++) {
+            JSONObject o = array.optJSONObject(i);
+            if (o == null) {
+                continue;
+            }
+            String id = o.optString("id", "").trim();
+            if (id.length() != 11) {
+                continue;
+            }
+            String title = o.optString("title", o.optString("name", id));
+            out.add(new Song(id, title));
+            ids.add(id);
         }
     }
 

@@ -277,6 +277,10 @@ public class BrowsePresenter extends BasePresenter<BrowseView> implements Sectio
             mSections.add(new BrowseSection(AllowList.SONGS_SECTION_ID, "Songs", BrowseSection.TYPE_GRID, R.drawable.icon_music, false));
         }
 
+        if (!list.getScenes().isEmpty()) {
+            mSections.add(new BrowseSection(AllowList.SCENES_SECTION_ID, "Scenes", BrowseSection.TYPE_GRID, R.drawable.icon_kids_home, false));
+        }
+
         for (AllowList.Channel channel : list.getChannels()) {
             Video item = new Video();
             item.channelId = channel.id;
@@ -293,6 +297,7 @@ public class BrowsePresenter extends BasePresenter<BrowseView> implements Sectio
 
     private void initAllowListCallbacks() {
         mLocalGridMappings.put(AllowList.SONGS_SECTION_ID, () -> AllowList.instance(getContext()).createSongVideos());
+        mLocalGridMappings.put(AllowList.SCENES_SECTION_ID, () -> AllowList.instance(getContext()).createSceneVideos());
 
         for (Video item : mAllowedChannelItems) {
             createPinnedMapping(item);

@@ -1,0 +1,23 @@
+# KidTube link list. Paste links here; they are ADDED to channels.json (nothing is overwritten).
+# YouTube IDs and titles are looked up automatically by GitHub. One link per line.
+# Lines starting with # are ignored. Links that were already added are skipped.
+#
+# WHERE A LINK GOES - put a header line, everything below it goes there:
+#   [songs]      video links     -> "Songs" section
+#   [scenes]     video links     -> "Scenes" section
+#   [channels]   channel links   -> one entry per channel
+# Or choose per line with a prefix:   scene: https://youtu.be/XXXXXXXXXXX
+#                                     song: https://youtu.be/XXXXXXXXXXX
+#                                     channel: https://www.youtube.com/@SomeChannel
+# Optional custom name:               scene: Beach day | https://youtu.be/XXXXXXXXXXX
+#
+# To REMOVE something: delete its entry in channels.json (removing the line here does nothing).
+#
+# [songs]
+# https://www.youtube.com/watch?v=XXXXXXXXXXX
+#
+# [scenes]
+# https://youtu.be/XXXXXXXXXXX
+#
+# [channels]
+# https://www.youtube.com/@SomeChannel
