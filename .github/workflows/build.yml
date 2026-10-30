@@ -39,6 +39,16 @@ jobs:
           # bundled fallback copy of the list
           cp channels.json smarttubetv/src/main/assets/channels.json
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Apply app name and images from branding/
+        run: |
+          python -m pip install --quiet pillow
+          python scripts/apply_branding.py
+
       - name: Configure signing
         env:
           KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
