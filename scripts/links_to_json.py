@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
-"""Turns links.txt into channels.json (standard library only).
+"""Adds the links in links.txt to channels.json (standard library only).
 
   video link   -> song   (id read from the link; title from YouTube oEmbed)
   channel link -> channel (UC... id read from the link or from the channel page)
 
+It MERGES: everything already in channels.json is kept, new links are added at the end,
+duplicates are skipped. Nothing is ever removed (to remove something, edit channels.json).
+A link written as "Some name | https://..." that already exists gets renamed.
+
 Usage: python3 scripts/links_to_json.py [links.txt] [channels.json]
-Exit code 0 = file written. Lines that could not be resolved are listed and skipped.
-If NOTHING could be resolved from a non-empty links.txt, the old channels.json is left untouched.
+Exit codes: 0 = ok, 2 = ok but some links could not be resolved, 1 = nothing could be resolved
+(channels.json is left untouched in that case).
 """
 import json
 import re
@@ -87,8 +91,24 @@ def main():
     dst = sys.argv[2] if len(sys.argv) > 2 else "channels.json"
 
     channels, songs, failed = [], [], []
-    seen_c, seen_s = set(), set()
     wanted = 0
+
+    # start from what is already in channels.json (placeholder rows are dropped)
+    try:
+        with open(dst, encoding="utf-8") as f:
+            old = json.load(f)
+        for c in old.get("channels", []):
+            if re.fullmatch(CHANNEL_ID, str(c.get("id", ""))):
+                channels.append({"name": c.get("name") or c["id"], "id": c["id"]})
+        for s in old.get("songs", []):
+            if re.fullmatch(VIDEO_ID, str(s.get("id", ""))):
+                songs.append({"title": s.get("title") or s["id"], "id": s["id"]})
+    except (OSError, ValueError):
+        pass
+    existing_before = (len(channels), len(songs))
+    by_c = {c["id"]: c for c in channels}
+    by_s = {s["id"]: s for s in songs}
+    seen_c, seen_s = set(by_c), set(by_s)
 
     for raw in open(src, encoding="utf-8"):
         line = raw.strip()
@@ -107,7 +127,11 @@ def main():
             if vid:
                 if vid not in seen_s:
                     seen_s.add(vid)
-                    songs.append({"title": custom or song_title(vid), "id": vid})
+                    entry = {"title": custom or song_title(vid), "id": vid}
+                    songs.append(entry)
+                    by_s[vid] = entry
+                elif custom:
+                    by_s[vid]["title"] = custom
                 continue
             if "list=" in line and "/playlist" in line:
                 failed.append((raw.strip(), "playlist links are not supported; use a channel or video link"))
@@ -115,15 +139,24 @@ def main():
             cid, name = channel_from(line)
             if cid not in seen_c:
                 seen_c.add(cid)
-                channels.append({"name": custom or name, "id": cid})
+                entry = {"name": custom or name, "id": cid}
+                channels.append(entry)
+                by_c[cid] = entry
+            elif custom:
+                by_c[cid]["name"] = custom
         except Exception as e:
             failed.append((raw.strip(), str(e)))
 
-    print("Channels: %d | Songs: %d | Failed: %d" % (len(channels), len(songs), len(failed)))
+    print("Channels: %d (was %d) | Songs: %d (was %d) | Failed: %d" % (
+        len(channels), existing_before[0], len(songs), existing_before[1], len(failed)))
     for line, why in failed:
         print("  FAILED: %s  ->  %s" % (line, why))
 
-    if wanted and not channels and not songs:
+    if wanted == 0:
+        print("links.txt has no links. %s left unchanged." % dst)
+        sys.exit(0)
+
+    if failed and len(failed) == wanted:
         print("Nothing could be resolved. Leaving %s unchanged." % dst)
         sys.exit(1)
 

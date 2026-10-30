@@ -1,9 +1,11 @@
-# KidTube link list. Edit THIS file; channels.json is generated from it automatically.
-# One link per line. Lines starting with # are ignored.
+# KidTube link list. Paste links here; they are ADDED to channels.json (nothing is overwritten).
+# One link per line. Lines starting with # are ignored. Already-added links are skipped.
 #
 # - A video link (watch?v=..., youtu.be/..., shorts/...) becomes a SONG.
 # - Anything else (@handle, /channel/UC..., /c/name, /user/name) becomes a CHANNEL.
 # - Optional custom name:   My name | https://www.youtube.com/@something
+#
+# To REMOVE a channel or song: delete its entry in channels.json (removing the line here does nothing).
 #
 # Examples (delete the # to use them):
 # https://www.youtube.com/@SomeChannel

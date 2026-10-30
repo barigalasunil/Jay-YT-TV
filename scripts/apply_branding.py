@@ -58,7 +58,9 @@ def main():
         save(icon, "mipmap-nodpi-v30/app_icon.png", 320, 320, "RGBA")  # Android 11+
         logo_path = os.path.join(BRAND, "logo.png")
         logo = Image.open(logo_path) if os.path.exists(logo_path) else icon
-        save(logo, "mipmap-nodpi/app_logo.png", 180, 180, "RGBA")
+        # The in-app badge differs per color theme; use the same logo for all of them.
+        for name in ("app_logo", "app_logo_semi_red", "app_logo_semi_grey"):
+            save(logo, "mipmap-nodpi/%s.png" % name, 180, 180, "RGBA")
 
     # ---- TV banner
     banner_path = os.path.join(BRAND, "banner.png")
